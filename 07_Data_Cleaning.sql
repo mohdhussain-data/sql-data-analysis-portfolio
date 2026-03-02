@@ -189,7 +189,24 @@ Then convert the string into an actual DATE using CAST.*/
 
 SELECT CAST(
             CONCAT(
-                   SUBSTR(date, 7, 4), '-',
-                   SUBSTR(date, 1, 2), '-',
-                   SUBSTR(date, 4, 2)) AS DATE) AS formatted_date
+                   SUBSTR(incident_datetime, 7, 4), '-',
+                   SUBSTR(incident_datetime, 1, 2), '-',
+                   SUBSTR(incident_datetime, 4, 2)) AS DATE) AS formatted_date
+FROM sf_crime_data;
+
+
+/*QUESTION:
+Extract the year from the incident_datetime column and convert it into INTEGER for analytical use.
+
+REWRITE:
+1) Final Output: Multiple rows - incident_year (integer).
+2) Group/Scope: No grouping required.
+3) Selection Logic: Extract characters 7-10 (YYYY portion) using SUBSTR.
+4) Final Calculation: Use CAST to convert year into INTEGER.
+
+LOGIC:
+The incident_datetime column is stored as TEXT. Extract the year portion (YYYY) from the string and convert it to INTEGER using CAST,
+so it can be used in numerical analysis and grouping.*/
+
+SELECT CAST(SUBSTR(incident_datetime, 7, 4) AS INTEGER) AS incident_year
 FROM sf_crime_data;
