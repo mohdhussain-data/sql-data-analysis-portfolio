@@ -210,3 +210,70 @@ so it can be used in numerical analysis and grouping.*/
 
 SELECT CAST(SUBSTR(incident_datetime, 7, 4) AS INTEGER) AS incident_year
 FROM sf_crime_data;
+
+
+/*QUESTION:
+Use a LEFT JOIN between accounts and orders to find accounts without orders and replace NULL values in the joined order columns
+using COALESCE for cleaner analytical output.
+
+REWRITE:
+1) Final Output: Multiple rows showing account details along with cleaned order information.
+2) Group/Scope: No grouping required. Row-level cleaning after LEFT JOIN.
+3) Selection Logic: Perform LEFT JOIN to keep all accounts. Replace NULL values from the orders table using COALESCE.
+4) Final Calculation: Replace:
+                      orders.id with accounts.id if NULL.
+                      orders.account_id with accounts.id if NULL.
+                      Numeric columns (all qty and usd columns) with 0 if NULL.
+
+LOGIC:
+LEFT JOIN keeps all accounts, but for accounts without orders,
+columns from the orders table become NULL. To make dataset reporting-ready:
+Replace missing orders IDs with the account ID. Replace missing numeric values with 0.
+Ensure no NULL values break future aggregations.*/
+
+SELECT a.id AS account_id,
+       a.name AS account_name,
+       COALESCE(o.id, a.id) AS order_or_account_id,
+       COALESCE(o.account_id, a.id) AS cleaned_account_id,
+       COALESCE(o.standard_qty, 0) AS standard_qty,
+       COALESCE(o.gloss_qty, 0) AS gloss_qty,
+       COALESCE(o.poster_qty, 0) AS poster_qty,
+       COALESCE(o.total, 0) AS total,
+       COALESCE(o.standard_amt_usd, 0) AS standard_amt_usd,
+       COALESCE(o.gloss_amt_usd, 0) AS gloss_amt_usd,
+       COALESCE(o.poster_amt_usd, 0) AS poster_amt_usd,
+       COALESCE(o.total_amt_usd, 0) AS total_amt_usd
+FROM accounts a
+LEFT JOIN orders o
+ON a.id = o.account_id;
+
+
+/*QUESTION:
+From sf_crime_data, clean the incident_datetime column by converting it into a proper DATE type.
+Then generate a yearly summary showing the total number of incidents per year.
+
+REWRITE:
+1) Final Output: Multiple rows - incident_year and total_incidents.
+2) Group/Scope: Group by incident_year.
+3) Selection Logic: Extract year, month, and day from the text-based incident_datetime.
+                    Rearrange into SQL DATE format (YYYY-MM-DD).
+                    Use CAST to convert it into DATE type.
+                    Extract the year from the cleaned date. Count number of incidents per year.
+4) Final Calculation: COUNT(*) grouped by incident_year.
+
+LOGIC:
+The incident_datetime column is stored as TEXT in format: MM/DD/YYYY HH:MM:SS AM +0000
+SQL requires date format as: YYYY-MM-DD
+Use SUBSTR to extract year, month, and day. Use CONCAT to rearrange into: YYYY-MM-DD.
+Use CAST to convert the string into DATE type. Extract the year portion from the cleaned date.
+Group by year and count total incidents.*/
+
+WITH cleaned_dates AS (SELECT CAST(CONCAT(SUBSTR(incident_datetime, 7, 4), '-',
+                              SUBSTR(incident_datetime, 1, 2), '-',
+                              SUBSTR(incident_datetime, 4, 2)) AS DATE) AS cleaned_date
+                       FROM sf_crime_data)
+
+SELECT CAST(SUBSTR(cleaned_date::TEXT, 1, 4) AS INTEGER) AS incident_year,
+       COUNT(*) AS incident_count
+FROM cleaned_dates
+GROUP BY incident_year;
