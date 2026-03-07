@@ -173,3 +173,59 @@ SELECT id,
        SUM(total_amt_usd)
        OVER (PARTITION BY account_id) AS account_total_revenue
 FROM orders;
+
+
+/*QUESTION:
+For each order, display the order amount along with the average order value and total revenue for that account using a shared window function.
+
+REWRITE:
+1) Final Output: Multiple rows - id, account_id, total_amt_usd, avg_order_value, account_total_reveneue.
+2) Group/Scope: Partition rows by account_id.
+3) Selection Logic: Define a window alias that partitions rows by account_id and reuse the alias for multiple window calculations.
+4) Final Calculation: AVG(total_amt_usd) to compute the average order value per account.
+                      SUM(total_amt_usd) to compute total revenue per account.
+
+LOGIC:
+Each account can have multiple orders. Instead of repeating the same window definition multiple times,
+create a window alias using WINDOW.
+Partition the dataset by account_id and reuse this window definition for multiple calculations such as
+average order value and total revenue.*/
+
+SELECT id,
+       account_id,
+       total_amt_usd,
+       AVG(total_amt_usd) OVER account_window AS avg_order_value,
+       SUM(total_amt_usd) OVER account_window AS account_total_reveneue
+FROM orders
+WINDOW account_window AS (PARTITION BY account_id);
+
+
+/*QUESTION:
+For each order placed by an account, display the order amount, the previous order amount
+from the same account, and calculate the change in order value compared to the previous purchase.
+
+REWRITE:
+1) Final Output: Multiple rows - id, account_id, occurred_at, total_amt_usd, previous_order_amount, order_value_change.
+2) Group/Scope: Partition rows by account_id.
+3) Selection Logic: Order rows chronologically by occurred_at within each account to trach the sequence of purchases.
+4) Final Calculation: Use the LAG() window function to retrieve the previous order amount,
+and calculate the difference between the current order and the previous order.
+
+LOGIC:
+Each account can place multiple orders over time. To analyze purchasing behaviour,
+we compare each order amount with the previous order amount for the same account.
+First partition the dataset by account_id so that comparisons occur only within the same account.
+Then order the rows by occurred_at to maintain the timeline of orders.
+Use LAG() function to retrieve the previous order value. Finally subtract the previous order value
+from the current order value to calculate how much the purchase order amount increased or decreased.*/
+
+SELECT id,
+       account_id,
+       occurred_at,
+       total_amt_usd,
+       LAG(total_amt_usd)
+       OVER (PARTITION BY account_id ORDER BY occurred_at) AS previous_order_amount,
+       total_amt_usd -
+       LAG(total_amt_usd)
+       OVER (PARTITION BY account_id ORDER BY occurred_at) AS order_value_change
+FROM orders;
