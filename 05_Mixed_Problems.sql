@@ -1,3 +1,20 @@
+/*
+FILE: 05_Mixed_Problems.sql
+
+DESCRIPTION:
+This file contains analytical SQL problems that combine multiple
+concepts learned in earlier sections. These queries demonstrate
+how different SQL techniques work together to solve real data
+analysis tasks.
+
+KEY CONCEPTS:
+- Combining filtering, aggregation, and joins
+- Multi-step analytical queries
+- Applying multiple SQL techniques in a single problem
+- Translating business questions into SQL logic
+*/
+
+
 /*QUESTION:
 Which accounts have total revenue greater than the average total revenue per account?
 

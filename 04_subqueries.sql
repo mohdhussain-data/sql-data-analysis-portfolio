@@ -1,3 +1,18 @@
+/*
+FILE: 04_Subqueries.sql
+
+DESCRIPTION:
+This file contains queries that use subqueries to perform multi-step
+analysis by generating intermediate results within nested queries.
+
+KEY CONCEPTS:
+- Subqueries in WHERE clauses
+- Subqueries in SELECT statements
+- Nested aggregations
+- Multi-step analytical queries
+*/
+
+
 --QUESTION:
 --Provide the name of the sales_rep in each region with the largest amount of total_amt_usd sales.
 

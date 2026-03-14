@@ -1,3 +1,20 @@
+/*
+FILE: 07_Data_Cleaning.sql
+
+DESCRIPTION:
+This file demonstrates techniques used to clean and prepare raw data
+for analysis. The queries transform messy fields into structured,
+analysis-ready datasets.
+
+KEY CONCEPTS:
+- String manipulation (LEFT, RIGHT, SUBSTR, STRPOS)
+- Text parsing and domain extraction
+- Data type conversion using CAST
+- Handling missing values with COALESCE
+- Preparing clean datasets for analysis
+*/
+
+
 /*QUESTION:
 In the accounts table, how many companies use each website extension?
 

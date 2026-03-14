@@ -1,3 +1,21 @@
+/*
+FILE: 01_SQL_Fundamentals.sql
+
+DESCRIPTION:
+This file contains foundational SQL queries used to explore relational
+datasets and retrieve structured information from database tables.
+These queries demonstrate the core SQL techniques that form the
+foundation of data analysis.
+
+KEY CONCEPTS:
+- SELECT statements
+- Column selection
+- Basic filtering using WHERE
+- Sorting results using ORDER BY
+- Limiting result sets using LIMIT
+*/
+
+
 --QUESTION:
 --Show the first 10 orders with id, account_id, and total_amt_usd.
 --LOGIC: Select the required columns and limit the number of rows.

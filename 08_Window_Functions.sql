@@ -1,3 +1,20 @@
+/*
+FILE: 08_Window_Functions.sql
+
+DESCRIPTION:
+This file demonstrates analytical SQL techniques using window functions
+to perform calculations across related rows while preserving row-level detail.
+
+KEY CONCEPTS:
+- Running totals
+- Partitioned calculations using OVER()
+- Ranking functions (ROW_NUMBER, RANK, DENSE_RANK)
+- Window aggregates (SUM, AVG)
+- Comparing rows using LAG
+- Percentile segmentation using NTILE
+*/
+
+
 /*QUESTION:
 Create a running total of standard_amt_usd over order time. 
 Return the amount for each row and the cumulative running total.

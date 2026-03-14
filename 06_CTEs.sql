@@ -1,3 +1,18 @@
+/*
+FILE: 06_CTEs.sql
+
+DESCRIPTION:
+This file demonstrates the use of Common Table Expressions (CTEs) to
+structure complex queries into clear, readable steps.
+
+KEY CONCEPTS:
+- WITH clause
+- Query modularization
+- Structuring multi-step analysis
+- Improving readability of complex SQL
+*/
+
+
 /*QUESTION:
 Provide the name of the sales_rep in each region with the largest amount of total_amt_usd sales.
 

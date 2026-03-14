@@ -1,3 +1,18 @@
+/*
+FILE: 02_Aggregations.sql
+
+DESCRIPTION:
+This file demonstrates how aggregate functions are used to summarize data
+and generate analytical metrics from transactional datasets.
+
+KEY CONCEPTS:
+- Aggregate functions (SUM, COUNT, AVG, MIN, MAX)
+- GROUP BY for grouping records
+- HAVING for filtering aggregated results
+- Creating summary metrics for analysis
+*/
+
+
 /*QUESTION:
 How many orders were placed in total?
 

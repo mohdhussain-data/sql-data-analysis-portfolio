@@ -1,3 +1,21 @@
+/*
+FILE: 09_Advanced_SQL.sql
+
+DESCRIPTION:
+This file demonstrates advanced SQL patterns commonly used in real-world
+data analysis. The queries combine complex joins, dataset merging, and
+performance-aware query design.
+
+KEY CONCEPTS:
+- FULL OUTER JOIN relationship analysis
+- JOINs with comparison operators
+- SELF JOINs for sequential event analysis
+- Combining datasets using UNION
+- Query performance optimization using pre-aggregation
+- Multi-step analysis using joined subqueries
+*/
+
+
 /*QUESTION:
 Identify relationship gaps between accounts and sales representatives.
 Return all accounts and sales reps, including:

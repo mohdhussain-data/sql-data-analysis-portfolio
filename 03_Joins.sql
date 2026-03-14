@@ -1,3 +1,18 @@
+/*
+FILE: 03_Joins.sql
+
+DESCRIPTION:
+This file demonstrates how relational tables are combined using joins to
+analyze relationships between datasets.
+
+KEY CONCEPTS:
+- INNER JOIN
+- LEFT JOIN
+- Joining multiple tables
+- Relationship-based data analysis
+*/
+
+
 /*QUESTION:
 Show order id, account name and total_amt_usd.
 
