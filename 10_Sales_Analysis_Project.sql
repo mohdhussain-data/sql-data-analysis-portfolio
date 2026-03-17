@@ -71,3 +71,50 @@ This indicates strong revenue concentration among high-value customers.
 
 Retaining these accounts is critical for revenue stability, and the sales team should prioritize relationship management
 and long-term engagement with these key clients.*/
+
+
+/*
+--------------------------------------------------------------------------------
+QUERY 2 — Regional Revenue Performance
+--------------------------------------------------------------------------------
+*/
+
+/*QUESTION:
+Which geographic regions generate the highest revenue for the company?
+Analyze total revenue contribution by region to identify the strongest performing markets.
+
+REWRITE:
+Calculate the total revenue generated in each region by joining the orders, accounts, sales_reps, and region tables.
+Aggregate total_amt_usd for each region and sort the results from highest to lowest revenue contribution.
+
+LOGIC:
+1. Join orders with accounts using account_id.
+2. Join accounts with sales_reps using sales_rep_id.
+3. Join sales_reps with region using region_id.
+4. Aggregate total_amt_usd to compute total revenue generated in each region.
+5. Group results by region name.
+6. Sort regions in descending order of revenue.*/
+
+SELECT r.name AS region_name,
+       SUM(o.total_amt_usd) AS total_revenue
+FROM orders o
+JOIN accounts a
+ON o.account_id = a.id
+JOIN sales_reps sr
+ON sr.id = a.sales_rep_id
+JOIN region r
+ON r.id = sr.region_id
+GROUP BY r.name
+ORDER BY total_revenue DESC;
+
+/*INSIGHT:
+This analysis reveals which geographic regions contribute the largest share of company revenue.
+
+Regions generating higher revenue likely have stronger customer relationships, more active sales representatives,
+or greater product demand.
+
+Understanding regional performance helps leadership allocate sales resources effectively and identify markets with strong growth potential.
+*/
+
+
+
