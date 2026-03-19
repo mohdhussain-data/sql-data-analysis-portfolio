@@ -160,3 +160,66 @@ A small group of sales reps contributes a significant portion of overall revenue
 Identifying top performers helps in understanding effective sales strategies,
 while lower-performing reps may require support, training, or reassignment to improve overall team performance.
 */
+
+
+
+/*
+--------------------------------------------------------------------------------
+QUERY 4 — Revenue Trend and Year-over-Year Growth Analysis
+--------------------------------------------------------------------------------
+*/
+
+/*QUESTION:
+How has the company's revenue changed year over year, and which periods show significant growth or decline?
+Evaluate annual revenue performance and calculate year-over-year (YoY) growth to support business performance monitoring and
+strategic planning.
+
+REWRITE:
+Calculate total revenue for each year using the orders table.
+Then compare each year's revenue with the previous year by using a window function to retrieve prior values.
+Compute both the absolute revenue change and the percentage growth to identify performance trends over time.
+
+LOGIC:
+1. Use the orders table to access revenue and transaction timestamps.
+2. Extract the year from occurred_at using DATE_TRUNC.
+3. Aggregate total_amt_usd to compute total revenue per year.
+4. Use LAG() to obtain the previous year's revenue.
+5. Calculate:
+              revenue change = current year - previous year
+              growth percentage = (change / previous year) * 100
+6. Use NULLIF to prevent division by zero errors.
+7. Sort results chronologically for proper trend analysis.
+*/
+
+WITH yearly_revenue AS (SELECT DATE_TRUNC('year', occurred_at) AS year,
+                               SUM(total_amt_usd) AS total_revenue
+                        FROM orders
+                        GROUP BY year),
+
+     revenue_with_lag AS (SELECT year,
+                                 total_revenue,
+                                 LAG(total_revenue) OVER (ORDER BY year) AS previous_year_revenue
+                          FROM yearly_revenue)
+
+SELECT year,
+       total_revenue,
+       previous_year_revenue,
+       total_revenue - previous_year_revenue AS revenue_change,
+       (total_revenue - previous_year_revenue) * 100.0
+       / NULLIF(previous_year_revenue, 0) AS yoy_growth_percentage
+FROM revenue_with_lag
+ORDER BY year;
+
+/*INSIGHT:
+Revenue shows strong growth from 2013 to 2016, with particularly significant increases between 2013-2014 and 2015-2016,
+indicating periods of rapid business expansion.
+
+However, 2017 shows a sharp decline in revenue and a significant negative growth rate.
+This is likely due to incomplete or partial-year data rather than an actual business drop.
+
+The unusually high growth (978%) between 2013-2014 is driven by a low base year,
+which exaggerates percentage growth and should be interpreted with caution.
+
+This analysis highlights both growth momentum and potential data limitations,
+emphasizing the importance of validating time-based datasets before drawing conclusions.
+*/
