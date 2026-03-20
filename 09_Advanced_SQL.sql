@@ -37,14 +37,22 @@ Similarly, some sales reps may not currently manage any accounts. A FULL OUTER J
 - all sales reps
 Matched rows show valid relationships. Unmatched rows expose coverage gaps in the sales organization.*/
 
-SELECT a.id AS account_id,
-       a.name AS account_name,
-       sr.id AS sales_rep_id,
-       sr.name AS sales_rep_name
-FROM accounts a
-FULL OUTER JOIN sales_reps sr
-ON a.sales_rep_id = sr.id
-WHERE a.id IS NULL OR sr.id IS NULL;
+WITH relationship_data AS (SELECT a.id AS account_id,
+                                  a.name AS account_name,
+                                  sr.id AS sales_rep_id,
+                                  sr.name AS sales_rep_name,
+                                  CASE
+                                      WHEN a.id IS NULL THEN 'No Account'
+                                      WHEN sr.id IS NULL THEN 'No Sales Rep'
+                                      ELSE 'Mapped'
+                                  END AS relationship_status
+                           FROM accounts a
+                           FULL OUTER JOIN sales_reps sr
+                           ON a.sales_rep_id = sr.id)
+
+SELECT *
+FROM relationship_data
+WHERE relationship_status <> 'Mapped';
 
 -- Note: In the Parch & Posey dataset this query returns no rows because the data is clean.
 -- However, this pattern is useful for detecting orphan records in real production datasets.
@@ -75,7 +83,7 @@ CROSS JOIN
        (SELECT AVG(total_amt_usd) AS avg_order_value
        FROM orders
        ) avg_table
-ON o.total_amt_usd > avg_table.avg_order_value;
+WHERE o.total_amt_usd > avg_table.avg_order_value;
 
 
 /*QUESTION:
@@ -110,7 +118,7 @@ SELECT w1.account_id,
        w2.occurred_at AS second_event_time,
        w2.channel AS second_channel
 FROM web_events w1
-LEFT JOIN web_events w2
+JOIN web_events w2
 ON w1.account_id = w2.account_id
 AND w2.occurred_at > w1.occurred_at
 AND w2.occurred_at <= w1.occurred_at + INTERVAL '1 day'
@@ -251,7 +259,7 @@ JOIN
        GROUP BY account_id
        ) revenue
 ON a.id = revenue.account_id
-JOIN
+CROSS JOIN
               (SELECT AVG(total_revenue) AS avg_revenue
               FROM
                      (SELECT account_id,
@@ -260,5 +268,4 @@ JOIN
                      GROUP BY account_id
                      ) t
               ) avg_rev
-ON avg_rev.avg_revenue = avg_rev.avg_revenue
 ORDER BY revenue.total_revenue DESC;

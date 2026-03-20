@@ -30,7 +30,7 @@ Order the dataset by occurred_at, Use SUM() as a window function to continuously
 
 SELECT standard_amt_usd,
        SUM(standard_amt_usd)
-       OVER (ORDER BY occurred_at) AS running_total
+       OVER (ORDER BY occurred_at ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total
 FROM orders;
 
 
@@ -53,7 +53,8 @@ SELECT account_id,
        occurred_at,
        standard_amt_usd,
        SUM(standard_amt_usd)
-       OVER (PARTITION BY account_id ORDER BY occurred_at) AS running_total
+       OVER (PARTITION BY account_id ORDER BY occurred_at
+             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total
 FROM orders;
 
 
@@ -77,7 +78,8 @@ Calculate a cumulative SUM() of standard_amt_usd that resets when the year chang
 SELECT standard_amt_usd,
        DATE_TRUNC('year', occurred_at) AS year,
        SUM(standard_amt_usd)
-       OVER (PARTITION BY DATE_TRUNC('year', occurred_at) ORDER BY occurred_at) AS running_total
+       OVER (PARTITION BY DATE_TRUNC('year', occurred_at) ORDER BY occurred_at
+             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total
 FROM orders;
 
 
@@ -130,7 +132,7 @@ Rank the total paper ordered for each account using DENSE_RANK, from highest to 
 Return id, account_id, total, and the dense rank.
 
 REWRITE:
-1) Final Output: Multiple rows - id, account_id, total, desne_rank.
+1) Final Output: Multiple rows - id, account_id, total, dense_rank.
 2) Group/Scope: Partition the dataset by account_id.
 3) Selection Logic: Order rows by total in descending order within each account.
 4) Final Calculation: Use DENSE_RANK() window function.
@@ -144,7 +146,7 @@ SELECT id,
        account_id,
        total,
        DENSE_RANK()
-       OVER (PARTITION BY account_id ORDER BY total DESC) AS desne_rank
+       OVER (PARTITION BY account_id ORDER BY total DESC) AS dense_rank
 FROM orders;
 
 
@@ -240,11 +242,11 @@ SELECT id,
        account_id,
        occurred_at,
        total_amt_usd,
-       LAG(total_amt_usd)
-       OVER (PARTITION BY account_id ORDER BY occurred_at) AS previous_order_amount,
+       COALESCE(LAG(total_amt_usd)
+       OVER (PARTITION BY account_id ORDER BY occurred_at), 0) AS previous_order_amount,
        total_amt_usd -
-       LAG(total_amt_usd)
-       OVER (PARTITION BY account_id ORDER BY occurred_at) AS order_value_change
+       COALESCE(LAG(total_amt_usd)
+       OVER (PARTITION BY account_id ORDER BY occurred_at), 0) AS order_value_change
 FROM orders;
 
 
