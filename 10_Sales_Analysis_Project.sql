@@ -223,3 +223,109 @@ which exaggerates percentage growth and should be interpreted with caution.
 This analysis highlights both growth momentum and potential data limitations,
 emphasizing the importance of validating time-based datasets before drawing conclusions.
 */
+
+
+
+/*
+--------------------------------------------------------------------------------
+QUERY 5 — Customer Segmentation by Revenue
+--------------------------------------------------------------------------------
+*/
+
+/*QUESTION:
+Which customers can be segmented into revenue-based tiers to identify high-value and low-value accounts?
+
+REWRITE:
+1) Final Output: Multiple rows - account_id, account_name, total_revenue, customer_segment.
+2) Group/Scope: Group by account.
+3) Selection Logic: Aggregate total revenue per account.
+4) Final Calculation: Use NTILE(4) to segment customers into revenue quartiles and assign segment labels.
+
+LOGIC:
+1. Calculate total revenue for each account.
+2. Sort customers based on total revenue.
+3. Divide customers into 4 equal groups using NTILE(4).
+4. Assign business-friendly segment labels using CASE.*/
+
+WITH customer_revenue AS (SELECT a.id AS account_id,
+                                 a.name AS account_name,
+                                 SUM(o.total_amt_usd) AS total_revenue
+                          FROM accounts a
+                          JOIN orders o
+                          ON a.id = o.account_id
+                          GROUP BY a.id, a.name),
+
+     segmented AS (SELECT account_id,
+                          account_name,
+                          total_revenue,
+                          NTILE(4) OVER (ORDER BY total_revenue DESC) AS segment
+                   FROM customer_revenue)
+
+SELECT account_id,
+       account_name,
+       total_revenue,
+       CASE
+           WHEN segment = 1 THEN 'High Value'
+           WHEN segment = 2 THEN 'Mid-High Value'
+           WHEN segment = 3 THEN 'Mid-Low Value'
+           ELSE 'Low Value'
+       END AS customer_segment
+FROM segmented
+ORDER BY total_revenue DESC;
+
+/*INSIGHT:
+Cusomers are evenly distributed into four revenue-based segments using quartile segmentation.
+
+High Value customers (top 25%) contribute the most revenue and should be prioritized for retention and upselling.
+
+Low Value customers (bottom 25%) contribute minimal revenue and may required targeted marketing or cost control.
+
+This segmentation enables differentiated business strategies instead of treating all customers equally.
+*/
+
+
+
+/*
+--------------------------------------------------------------------------------
+QUERY 6 — Repeat vs One-time Customers
+--------------------------------------------------------------------------------
+*/
+
+/*QUESTION:
+How many customers are repeat buyers versus one-time buyers?
+
+REWRITE:
+1) Final Output: Multiple rows - customer_type, number_of_customers.
+2) Group/Scope: One row per customer type.
+3) Selection Logic: Count total orders per customer.
+4) Final Calculation: Classify customers using CASE and count them.
+
+LOGIC:
+1. Calculate total number of orders per account.
+2. Classify each customer as one-time or repeat.
+3. Aggregate the number of customers in each category.*/
+
+WITH customer_orders AS (SELECT a.id AS account_id,
+                                COUNT(o.id) AS total_orders
+                         FROM accounts a
+                         JOIN orders o
+                         ON a.id = o.account_id
+                         GROUP BY a.id)
+
+SELECT CASE
+           WHEN total_orders = 1 THEN 'One-time'
+           ELSE 'Repeat'
+       END AS customer_type,
+       COUNT(*) AS number_of_customers
+FROM customer_orders
+GROUP BY customer_type;
+
+/*INSIGHT:
+The customer base is heavily skewed toward repeat buyers with 95% of customers placing multiple orders.
+
+This indicates a strong B2B purchasing pattern where customers engage in recurring transactions rather than one-time purchases.
+
+The very low proportion of ont-time customers (5%) suggest high customer stickiness and long-term relationships.
+
+Business focus should be on maintaining repeat customer satisfaction, as revenue is highly dependant on recurring clients.
+*/
