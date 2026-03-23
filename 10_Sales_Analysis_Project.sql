@@ -57,7 +57,9 @@ LOGIC:
 4. Sort customers in descending order of revenue to identify top contributors.*/
 
 SELECT a.name AS account_name,
-       SUM(o.total_amt_usd) AS total_revenue
+       SUM(o.total_amt_usd) AS total_revenue,
+       ROUND(100.0 * SUM(o.total_amt_usd) /
+       SUM(SUM(o.total_amt_usd)) OVER (), 2) AS revenue_percentage
 FROM accounts a
 JOIN orders o
 ON a.id = o.account_id
@@ -66,11 +68,16 @@ ORDER BY total_revenue DESC
 LIMIT 10;
 
 /*INSIGHT:
-The analysis shows that a small number of customer accounts contributes a significant portion of total company revenue.
-This indicates strong revenue concentration among high-value customers.
+Revenue is distributed across a large number of customers, with the top individual accounts contributing only 1-1.6% each.
 
-Retaining these accounts is critical for revenue stability, and the sales team should prioritize relationship management
-and long-term engagement with these key clients.*/
+Even the top 10 customers collectively contribute a relatively small portion of total revenue,
+indicating low revenue concentration.
+
+This suggests a diversified customer base with reduced dependency risk on individual accounts.
+
+From a business perspective, revenue stability is higher, but growth strategies may require scaling across
+multiple customers rather than relying on a few key accounts.
+*/
 
 
 /*
@@ -96,7 +103,9 @@ LOGIC:
 6. Sort regions in descending order of revenue.*/
 
 SELECT r.name AS region_name,
-       SUM(o.total_amt_usd) AS total_revenue
+       SUM(o.total_amt_usd) AS total_revenue,
+       ROUND(100.0 * SUM(o.total_amt_usd) /
+       SUM(SUM(o.total_amt_usd)) OVER (), 2) AS revenue_percentage
 FROM orders o
 JOIN accounts a
 ON o.account_id = a.id
@@ -108,12 +117,18 @@ GROUP BY r.name
 ORDER BY total_revenue DESC;
 
 /*INSIGHT:
-This analysis reveals which geographic regions contribute the largest share of company revenue.
+Revenue is moderately concentrated across regions, with Northeast and Southeast together contributing over 60% of total revenue.
 
-Regions generating higher revenue likely have stronger customer relationships, more active sales representatives,
-or greater product demand.
+Northeast is the leading region, generating approximately one-third of total revenue,
+indicating strong market presence or effective sales operations.
 
-Understanding regional performance helps leadership allocate sales resources effectively and identify markets with strong growth potential.
+Midwest significantly underperforms, contributing only 13%, suggesting either lower market penetration or weaker sales activity.
+
+From a business perspective, growth opportunities likely exist in Midwest, while Northeast and Southeast
+should be prioritized for retention and scaling.
+
+The relatively balanced distribution across the top three regions (Northeast, Southeast, West)
+indicates diversified geographic revenue streams, reducing dependency risk on a single region.
 */
 
 
@@ -142,7 +157,10 @@ LOGIC:
 */
 
 SELECT sr.name AS sales_rep_name,
-       SUM(o.total_amt_usd) AS total_revenue
+       SUM(o.total_amt_usd) AS total_revenue,
+       ROUND(100.0 * SUM(o.total_amt_usd) /
+       SUM(SUM(o.total_amt_usd)) OVER (), 2) AS revenue_percentage,
+       RANK() OVER (ORDER BY SUM(o.total_amt_usd) DESC) AS rep_rank
 FROM orders o
 JOIN accounts a
 ON o.account_id = a.id
@@ -153,12 +171,20 @@ ORDER BY total_revenue DESC
 LIMIT 10;
 
 /*INSIGHT:
-The analysis highlights the top-performing sales representatives based on total revenue generated.
+Sales performance shows moderate concentration, with top-performing representatives contributing a meaningful share of
+total revenue without extreme dependency.
 
-A small group of sales reps contributes a significant portion of overall revenue, indicating performance concentration within the sales team.
+The highest performing sales rep contributes approximately 4.75% of total revenue, while the top 10 reps collectively
+contribute around one-third of overall revenue.
 
-Identifying top performers helps in understanding effective sales strategies,
-while lower-performing reps may require support, training, or reassignment to improve overall team performance.
+This indicates a balanced sales structure where performance is distributed across multiple representatives rather than
+being dependent on a single individual.
+
+From a business perspective, this reduces operational risk while still highlighting top performers who can be used as
+benchmarks for training and performance optimization.
+
+The relatively small gap between top and mid-tier performers suggests consistent sales performance across the team,
+indicating effective sales processes or standardized account distribution.
 */
 
 
@@ -211,17 +237,20 @@ FROM revenue_with_lag
 ORDER BY year;
 
 /*INSIGHT:
-Revenue shows strong growth from 2013 to 2016, with particularly significant increases between 2013-2014 and 2015-2016,
-indicating periods of rapid business expansion.
+Revenue shows strong growth from 2014 through 2016, with particularly high accelaration between 2015 and 2016,
+indicating a period of significant business expansion.
 
-However, 2017 shows a sharp decline in revenue and a significant negative growth rate.
-This is likely due to incomplete or partial-year data rather than an actual business drop.
+The extrmenly high growth rate observed between 2013 and 2014 (~978%) is driven by a low baseline in 2013 and
+should not be interpreted as organic growth.
 
-The unusually high growth (978%) between 2013-2014 is driven by a low base year,
-which exaggerates percentage growth and should be interpreted with caution.
+Similarly, the sharp decline in 2017 (~-99%) is due to incomplete or partial-year data rather than an actual drop in business
+performance.
 
-This analysis highlights both growth momentum and potential data limitations,
-emphasizing the importance of validating time-based datasets before drawing conclusions.
+Excluding these edge cases, the company demonstrates consistent and strong year-over-year growth, suggesting increasing
+demand successful sales scaling during the 2014-2016 period.
+
+This analysis highlights the importance of validating time-based data completeness before drawing conclusions,
+as partial-year data can significantly distort growth metrics.
 */
 
 
@@ -274,11 +303,11 @@ FROM segmented
 ORDER BY total_revenue DESC;
 
 /*INSIGHT:
-Cusomers are evenly distributed into four revenue-based segments using quartile segmentation.
+Customers are evenly distributed into four revenue-based segments using quartile segmentation.
 
 High Value customers (top 25%) contribute the most revenue and should be prioritized for retention and upselling.
 
-Low Value customers (bottom 25%) contribute minimal revenue and may required targeted marketing or cost control.
+Low Value customers (bottom 25%) contribute minimal revenue and may require targeted marketing or cost control.
 
 This segmentation enables differentiated business strategies instead of treating all customers equally.
 */
@@ -308,7 +337,7 @@ LOGIC:
 WITH customer_orders AS (SELECT a.id AS account_id,
                                 COUNT(o.id) AS total_orders
                          FROM accounts a
-                         JOIN orders o
+                         LEFT JOIN orders o
                          ON a.id = o.account_id
                          GROUP BY a.id)
 
@@ -325,7 +354,173 @@ The customer base is heavily skewed toward repeat buyers with 95% of customers p
 
 This indicates a strong B2B purchasing pattern where customers engage in recurring transactions rather than one-time purchases.
 
-The very low proportion of ont-time customers (5%) suggest high customer stickiness and long-term relationships.
+The very low proportion of one-time customers (5%) suggest high customer stickiness and long-term relationships.
 
-Business focus should be on maintaining repeat customer satisfaction, as revenue is highly dependant on recurring clients.
+Business focus should be on maintaining repeat customer satisfaction, as revenue is highly dependent on recurring clients.
+*/
+
+
+
+/*
+--------------------------------------------------------------------------------
+QUERY 7 — Revenue Contribution by Customer Segment
+--------------------------------------------------------------------------------
+*/
+
+/*QUESTION:
+How much revenue does each customer segment contribute to total company revenue?
+
+REWRITE:
+1) Final Output: Multiple rows - customer_segment, num_customers, total_revenue.
+2) Group/Scope: Group by customer segment.
+3) Seleciton Logic: Use segmentation logic from Query 5.
+4) Final Calculation: COUNT customers and SUM revenue per segment.
+
+LOGIC:
+1. Segment customers based on total revenue.
+2. Aggregate number of customers and revenue for each segment.
+3. Compare contribution across segments.*/
+
+WITH customer_revenue AS (SELECT a.id AS account_id,
+                                 SUM(o.total_amt_usd) AS total_revenue
+                          FROM accounts a
+                          JOIN orders o
+                          ON a.id = o.account_id
+                          GROUP BY a.id),
+
+     segmented AS (SELECT account_id,
+                          total_revenue,
+                          NTILE(4) OVER (ORDER BY total_revenue DESC) AS segment
+                   FROM customer_revenue)
+
+SELECT CASE
+           WHEN segment = 1 THEN 'High Value'
+           WHEN segment = 2 THEN 'Mid-High Value'
+           WHEN segment = 3 THEN 'Mid-Low Value'
+           ELSE 'Low Value'
+       END AS customer_segment,
+       COUNT(*) AS num_customers,
+       SUM(total_revenue) AS total_revenue,
+       ROUND(100.0 * SUM(total_revenue) /
+       SUM(SUM(total_revenue)) OVER (), 2) AS revenue_percentage
+FROM segmented
+GROUP BY customer_segment
+ORDER BY total_revenue DESC;
+
+/*INSIGHT:
+Revenue is heavily concentrated among top-tier customers, with High Value segment (top 25%) contributing approximately 64% of total revenue.
+
+In contrast, the bottom 50% of customers (Mid-Low and Low Value segments) contribute only around 13% of total revenue,
+indicating a significant imbalance in revenue distribution.
+
+This highlights a strong dependency on a relatively small group of high-value customers, creating potential revenue
+risk if these accounts are lost.
+
+From a business perspective, retaining and expanding High-Value customers should be the top priority, while
+lower segments may require cost-efficient engagement strategies rather than aggressive investment.
+
+This pattern closely resembles the Pareto Principle (80/20 rule), where a minority of customers drives the majority of revenue.
+*/
+
+
+
+/*
+--------------------------------------------------------------------------------
+QUERY 8 — Monthly Revenue Trend
+--------------------------------------------------------------------------------
+*/
+
+/*QUESTION:
+How does revenue trend over time on a monthly basis?
+
+REWRITE:
+1) Final Output: Multiple rows - month, total_revenue.
+2) Group/Scope: Group by month.
+3) Selection Logic: Extract month from occurred_at.
+4) Final Calculation: SUM revenue per month.
+
+LOGIC:
+1. Extract month from order date.
+2. Aggregate revenue per month.
+3. Sort chronologically to analyze trend.*/
+
+WITH monthly_revenue AS (SELECT DATE_TRUNC('month', occurred_at)::DATE AS month,
+                                SUM(total_amt_usd) AS total_revenue
+                         FROM orders
+                         GROUP BY DATE_TRUNC('month', occurred_at)),
+
+     revenue_with_lag AS (SELECT month,
+                                 total_revenue,
+                                 LAG(total_revenue) OVER (ORDER BY month) AS previous_month_revenue
+                          FROM monthly_revenue)
+
+SELECT month,
+       total_revenue,
+       previous_month_revenue,
+       total_revenue - previous_month_revenue AS revenue_change,
+       ROUND(total_revenue - previous_month_revenue * 100.0 /
+       NULLIF(previous_month_revenue, 0), 2) AS growth_percentage
+FROM revenue_with_lag
+ORDER BY month;
+
+/*INSIGHT:
+Monthly revenue shows a clear upward trend from 2014 through 2016, with a noticeable accelaration in growth during 2016 where
+monthly revenue consistently exceeds 1M.
+
+The strongest performance is observed in late 2016 (October-December), suggesting potential seasonality or end-of-year demand spikes.
+
+Earlier years (2014-2015) show relatively stable but lower revenue levels, indicating gradual business growth before scaling
+significantly in 2016.
+
+The sharp decline observed in 2017 is due to incomplete or partial-year data and should not be interpreted as a performance drop.
+
+The transition from steady growth to rapid scaling suggests a shift in business dynamics, potentially driven by increased
+customer acquisition, expansion into new markets, or improved sales efficiency.
+*/
+
+
+
+/*
+--------------------------------------------------------------------------------
+QUERY 9 — Marketing Channel Effectiveness
+--------------------------------------------------------------------------------
+*/
+
+/*QUESTION:
+Which marketing channels drive the highest customer engagement?
+
+REWRITE:
+1) Final Output: Multiple rows - channel, total_events.
+2) Group/Scope: Group by channel.
+3) Selection Logic: Use web_events table.
+4) Final Calculation: COUNT events per channel.
+
+LOGIC:
+1. Count number of web events per channel.
+2. Compare engagement across channels.
+3. Identify most effective acquisition/engagement sources.*/
+
+SELECT channel,
+       COUNT(*) AS total_events,
+       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS percentage,
+       RANK() OVER (ORDER BY COUNT(*) DESC) AS channel_rank
+FROM web_events
+GROUP BY channel
+ORDER BY total_events DESC;
+
+/*INSIGHT:
+Customer engagement is heavily dominated by the direct channel, contributing approximately 58% of total web events,
+significantly outperforming all other channels.
+
+All remaining channels (Facebook, Organic, AdWords) show relatively similar and moderate engagement levels,
+with no clear secondary driver of traffic.
+
+Lower-performing channels such as Banner and Twitter contribute minimal engagement, indicating limited effectiveness in
+driving user interaction.
+
+This distribution suggests strong brand recongnition or repeat customer behavior driving direct traffic, while
+paid and organic channels are under-leveraged and present potential areas for growth optimization.
+
+The heavy reliance on a single dominant channel introduces channel dependency risk, making diversification of acquisition
+sources a strategic priority.
 */
